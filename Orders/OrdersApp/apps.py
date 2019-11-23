@@ -1,5 +1,5 @@
 from django.apps import AppConfig
 
 
-class MessagesappConfig(AppConfig):
-    name = 'MessagesApp'
+class OrdersappConfig(AppConfig):
+    name = 'OrdersApp'
