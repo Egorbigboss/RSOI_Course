@@ -9,8 +9,7 @@ from django.db.models import Q
 
 class AllClothsView(APIView):
     def get(self, request: Request):
-            return Response(ClothSerializer(instance=Cloth.objects.all(), many=True).data)
-        # # Для определенного юзера
+        return Response(ClothSerializer(instance=Cloth.objects.all(), many=True).data)
         # try:
         #     user_id = request.query_params['user_id']
         # except KeyError:
@@ -27,7 +26,7 @@ class ConcreteClothView(APIView):
              cloth = Cloth.objects.get(pk=cloth_uuid)
          except Cloth.DoesNotExist:
              return Response(status=status.HTTP_404_NOT_FOUND)
-         serializer = clothSerializer(instance=cloths_amount)
+         serializer = ClothSerializer(instance=cloth)
          return Response(data=serializer.data, status=status.HTTP_200_OK)
 
     def delete(self, request: Request, cloth_uuid):
@@ -38,4 +37,4 @@ class ConcreteClothView(APIView):
          cloth.delete()
          return Response(status=status.HTTP_204_NO_CONTENT)
 
-class AddClothToClothView(APIView)
+# class AddClothToClothView(APIView)
