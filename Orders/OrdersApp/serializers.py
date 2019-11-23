@@ -9,7 +9,7 @@ class OrderSerializer(serializers.ModelSerializer):
             'uuid',
             'belongs_to_user_id',
             'text',
-            'cloth_type'
+            'type_of_cloth',
             'cloth_uuid',
         ]
 
