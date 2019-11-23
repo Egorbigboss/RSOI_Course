@@ -1,3 +1,5 @@
 from django.contrib import admin
+from ClothsApp.models import Order
 
-# Register your models here.
+
+admin.site.register(Cloth)
