@@ -7,32 +7,32 @@ from django.db.models import Q
 
 # Create your views here.
 
-class AllOrdersView(APIView):
 
-    def get(self, request: Request):
-        if len(request.query_params) == 0:
-            # Вообще все
+
+class ConcreteUserOrdersView(APIView):
+    def get(self,request : Request, user_id):
+        request=self.request
+        if user_id == None:
             return Response(OrderSerializer(instance=Order.objects.all(), many=True).data)
-        # Для определенного юзера
-        try:
-            user_id = request.query_params['user_id']
-        except KeyError:
-            return Response({'error': 'Wrong query params'}, status=status.HTTP_400_BAD_REQUEST)
         orders_amount = Order.objects.filter(Q(belongs_to_user_id = user_id))
         if len(orders_amount) == 0:
             return Response(status=status.HTTP_404_NOT_FOUND)
         serializer = OrderSerializer(instance=orders_amount, many=True)
         return Response(data=serializer.data, status=status.HTTP_200_OK)
 
-    def post(self, request : Request):
+    def post(self, request : Request,user_id):
         serializer = OrderSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class ConcreteOrderView(APIView):
+class AllOrdersView(APIView):
+    def get(self,request : Request):
+        request=self.request
+        return Response(OrderSerializer(instance=Order.objects.all(), many=True).data)
 
+class ConcreteOrderView(APIView):
     def get(self, request: Request, order_uuid):
          try:
              order = Order.objects.get(pk=order_uuid)
