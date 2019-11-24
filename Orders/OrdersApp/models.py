@@ -4,7 +4,7 @@ from django.db import models
 
 class Order(models.Model):
     uuid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    belongs_to_user_id = models.IntegerField(null=False)
+    belongs_to_user_id = models.CharField(null=True,max_length=20)
     text = models.CharField(null=True, max_length=2048)
     type_of_cloth = models.CharField(null=True, max_length = 20)
     cloth_uuid = models.UUIDField(null=True)
