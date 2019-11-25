@@ -11,7 +11,7 @@ urlpatterns = [
      url(r'^orders/$', views.OrdersView.as_view()),
      url(r'^orders/(?P<order_uuid>[0-9a-f-]+)/$',
          views.ConcreteOrderView.as_view()),
-     url(r'^orders/user/(?P<user_id>\d+)/create/$',views.CreateOrderView.as_view()),
+     url(r'^orders/user/create/$',views.CreateOrderView.as_view()),
 
      url(r'^orders/user/(?P<user_id>\d+)/$',views.ConcreteUserOrdersView.as_view())
 ]

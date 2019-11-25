@@ -12,12 +12,11 @@ class CreateCloth(APIView):
         return Response(data=response_json, status=code)
 
 class CreateOrderView(APIView):
-    def post(self, request : Request,user_id):
-        print("User ID - ",user_id)
+    def post(self, request : Request):
         order_data = {'text','type_of_cloth','days_for_clearing'}.intersection(request.data.keys())
         if (len(order_data)) != 3:
             return Response ({'error': 'Body must have text and days_for_clearing'},status=400)
-        response_json, code = Requester.create_order(belongs_to_user_id=user_id, text=request.data['text'], type_of_cloth=request.data['type_of_cloth'], days_for_clearing=request.data['days_for_clearing'])
+        response_json, code = Requester.create_order(belongs_to_user_id=request.user.id, text=request.data['text'], type_of_cloth=request.data['type_of_cloth'], days_for_clearing=request.data['days_for_clearing'])
         return Response(data=response_json, status=code)
 
 # class ClothsView(APIView):
@@ -32,7 +31,7 @@ class ConcreteClothView(APIView):
 
 class ConcreteUserOrdersView(APIView):
     def get(self, request: Request, user_id):
-        data, code = Requester.get_orders(user_id=user_id)
+        data, code = Requester.get_concrete_user_orders(user_id=user_id)
         return Response(data, status=code)
 
 
