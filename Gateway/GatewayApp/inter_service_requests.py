@@ -81,8 +81,8 @@ class Requester:
     @staticmethod
     def create_cloth(type_of_cloth: str, days_for_clearing: int):
         response = Requester.send_post_request(url=Requester.CLOTHS_HOST + 'all/', data={
-        'type_of_cloth' : type_of_cloth,
-        'days_for_clearing' : days_for_clearing
+            'type_of_cloth' : type_of_cloth,
+            'days_for_clearing' : days_for_clearing
         })
         print("Create cloth", response.json())
         return response.json(), response.status_code
@@ -112,6 +112,7 @@ class Requester:
             return response.json(), response.status_code
         print("JSON",response.json())
         response_json = response.json()
+        ans=[]
         for ord in response_json:
             try:
                 ans.append(Requester.__get_and_set_order_attachments(ord))
