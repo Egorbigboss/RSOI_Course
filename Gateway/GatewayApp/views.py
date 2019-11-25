@@ -21,10 +21,10 @@ class CreateOrderView(APIView):
         response_json, code = Requester.create_order(belongs_to_user_id=request.user.id, text=request.data['text'], type_of_cloth=request.data['type_of_cloth'], days_for_clearing=request.data['days_for_clearing'])
         return Response(data=response_json, status=code)
 
-# class ClothsView(APIView):
-#     def get(self, request: Request):
-#         data, code = Requester.get_cloths()
-#         return Response(data, status=code)
+class ClothsView(APIView):
+    def get(self, request: Request):
+        data, code = Requester.get_cloths()
+        return Response(data, status=code)
 
 class ConcreteClothView(APIView):
     def get(self, request: Request, cloth_uuid):
@@ -33,8 +33,10 @@ class ConcreteClothView(APIView):
 
 class ConcreteUserOrdersView(APIView):
     def get(self, request: Request, user_id):
-        data, code = Requester.get_concrete_user_orders(user_id=user_id)
-        return Response(data, status=code)
+        if int(user_id) == request.user.id:
+            data, code = Requester.get_concrete_user_orders(user_id=user_id)
+            return Response(data, status=code)
+        return Response ({'error': 'You can only check orders that belong to currently logged user'},status=400)
 
 
 class OrdersView(APIView):
