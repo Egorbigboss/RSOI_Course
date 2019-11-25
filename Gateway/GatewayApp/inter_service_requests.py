@@ -1,5 +1,6 @@
 import requests
 import json
+import re
 from typing import Tuple, Dict, List, Union, Any
 
 class ClothGetError(Exception):
@@ -9,9 +10,43 @@ class ClothGetError(Exception):
          self.err_msg = err_json
 
 class Requester:
+    ORDERS_URL = 'http://127.0.0.1:8000/api/orders/'
+    CLOTHS_URL = 'http://127.0.0.1:8000/api/cloths/'
     ORDERS_HOST = 'http://127.0.0.1:8001/api/orders/'
     CLOTHS_HOST = 'http://127.0.0.1:8002/api/cloths/'
     ERROR_RETURN = (json.dumps({'error': 'BaseHTTPError was raised!'}), 500)
+
+
+
+    def get_limit_offset_from_request(request):
+        try:
+            limit = request.query_params['limit']
+            offset = request.query_params['offset']
+        except KeyError:
+            return None
+        return limit, offset
+
+    def find_limit_and_offset_in_link(link: str):
+        limit_substr = re.findall(r'limit=\d+', link)
+        offset_substr = re.findall(r'offset=\d+', link)
+        limit = re.findall(r'\d+', limit_substr[0])
+        offset = [0]
+        if len(offset_substr) != 0:
+            offset = re.findall(r'\d+', offset_substr[0])
+        return limit[0], offset[0]
+
+    def next_and_prev_links_to_params(data: dict,current_host: str):
+        try:
+            next_link, prev_link = data['next'], data['previous']
+        except (KeyError, TypeError):
+             return data
+        if next_link:
+            limit, offset = Requester.find_limit_and_offset_in_link(next_link)
+            data['next'] = current_host + f'?limit={limit}&offset={offset}'
+        if prev_link:
+            limit, offset = Requester.find_limit_and_offset_in_link(prev_link)
+            data['previous'] = current_host + f'?limit={limit}&offset={offset}'
+        return data
 
     @staticmethod
     def __create_error_order(msg: str):
@@ -34,16 +69,18 @@ class Requester:
             return None
         return response
 
-
     @staticmethod
-    def get_cloths():
-        response = Requester.send_get_request(Requester.CLOTHS_HOST + f'all/')
-        print("Response JSON",response.json())
+    def get_cloths(request):
+        url = Requester.CLOTHS_HOST + f'all/'
+        cur_url = Requester.CLOTHS_URL
+        l_o = Requester.get_limit_offset_from_request(request)
+        if l_o is not None:
+            url += f'?&limit={l_o[0]}&offset={l_o[1]}'
+        response = Requester.send_get_request(url)
         if response is None:
             return Requester.ERROR_RETURN
-        if response.status_code != 200:
-            return response.json(), response.status_code
-        return response.json(), response.status_code
+        response_json = Requester.next_and_prev_links_to_params(response.json(),cur_url)
+        return response_json, response.status_code
 
     @staticmethod
     def get_concrete_cloth(uuid: str):
@@ -84,7 +121,6 @@ class Requester:
             'type_of_cloth' : type_of_cloth,
             'days_for_clearing' : days_for_clearing
         })
-        print("Create cloth", response.json())
         return response.json(), response.status_code
 
     @staticmethod
@@ -102,48 +138,69 @@ class Requester:
         else:
             return response_json, code
 
-
     @staticmethod
-    def get_concrete_user_orders(user_id):
-        response = Requester.send_get_request(Requester.ORDERS_HOST + f'user/{user_id}/')
+    def get_concrete_user_orders(request,user_id):
+        url = Requester.ORDERS_HOST + f'user/{user_id}/'
+        cur_url = Requester.ORDERS_URL + f'user/{user_id}/'
+        response = Requester.send_get_request(url)
+        l_o = Requester.get_limit_offset_from_request(request)
+        if l_o is not None:
+            url += f'?&limit={l_o[0]}&offset={l_o[1]}'
+        response = Requester.send_get_request(url)
         if response is None:
             return Requester.ERROR_RETURN
         if response.status_code != 200:
             return response.json(), response.status_code
-        print("JSON",response.json())
-        response_json = response.json()
-        ans=[]
-        for ord in response_json:
-            try:
-                ans.append(Requester.__get_and_set_order_attachments(ord))
-            except KeyError:
-                return (Requester.__create_error_order('Key error was raised, no cloth or audio uuid in order json!'),
-                        500)
-            except (ClothGetError) as e:
-                return e.err_msg, e.code
-        return ans, 200
+        response_json = Requester.next_and_prev_links_to_params(response.json(),cur_url)
+        if isinstance(response_json,dict):
+            for ord in response_json['results']:
+                try:
+                    ord = Requester.__get_and_set_order_attachments(ord)
+                except KeyError:
+                    return (Requester.__create_error_order('Key error was raised, no cloth uuid in order json!'),
+                            500)
+                except (ClothGetError) as e:
+                    return e.err_msg, e.code
+        else:
+            for ord in response_json:
+                try:
+                    ord = Requester.__get_and_set_order_attachments(ord)
+                except KeyError:
+                    return (Requester.__create_error_order('Key error was raised, no cloth uuid in order json!'),
+                            500)
+                except (ClothGetError) as e:
+                    return e.err_msg, e.code
+        return response_json, 200
 
     @staticmethod
-    def get_orders():
-        response = Requester.send_get_request(Requester.ORDERS_HOST + f'all/')
+    def get_orders(request):
+        url = Requester.ORDERS_HOST + f'all/'
+        l_o = Requester.get_limit_offset_from_request(request)
+        if l_o is not None:
+            url += f'?&limit={l_o[0]}&offset={l_o[1]}'
+        response = Requester.send_get_request(url)
         if response is None:
             return Requester.ERROR_RETURN
-        if response.status_code != 200:
-            return response.json(), response.status_code
-        print("JSON",response.json())
-        response_json = response.json()
-        ans = []
-        for ord in response_json:
-            try:
-                ans.append(Requester.__get_and_set_order_attachments(ord))
-            except KeyError:
-                return (Requester.__create_error_order('Key error was raised, no cloth or audio uuid in order json!'),
-                        500)
-            except (ClothGetError) as e:
-                return e.err_msg, e.code
-        return ans, 200
-
-
+        response_json = Requester.next_and_prev_links_to_params(response.json(),Requester.ORDERS_URL)
+        if isinstance(response_json,dict):
+            for ord in response_json['results']:
+                try:
+                    ord = Requester.__get_and_set_order_attachments(ord)
+                except KeyError:
+                    return (Requester.__create_error_order('Key error was raised, no cloth uuid in order json!'),
+                            500)
+                except (ClothGetError) as e:
+                    return e.err_msg, e.code
+        else:
+            for ord in response_json:
+                try:
+                    ord = Requester.__get_and_set_order_attachments(ord)
+                except KeyError:
+                    return (Requester.__create_error_order('Key error was raised, no cloth uuid in order json!'),
+                            500)
+                except (ClothGetError) as e:
+                    return e.err_msg, e.code
+        return response_json, 200
 
     @staticmethod
     def get_concrete_order(uuid: str):
@@ -156,7 +213,7 @@ class Requester:
         try:
             ans = Requester.__get_and_set_order_attachments(response_json)
         except KeyError:
-            return (Requester.__create_error_order('Key error was raised, no cloth or audio uuid in order json!'),
+            return (Requester.__create_error_order('Key error was raised, no cloth uuid in order json!'),
                     500)
         except (ClothGetError, AudioGetError) as e:
             return e.err_msg, e.code

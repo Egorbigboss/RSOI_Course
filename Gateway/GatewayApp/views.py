@@ -14,16 +14,14 @@ class CreateCloth(APIView):
 class CreateOrderView(APIView):
     def post(self, request : Request):
         order_data = {'text','type_of_cloth','days_for_clearing'}.intersection(request.data.keys())
-        print("Authenticated - ",request.user.is_authenticated)
         if ((len(order_data)) != 3  or not request.user.is_authenticated):
-            print("?????")
             return Response ({'error': 'Body must have text and days_for_clearing and user must be autheicated '},status=400)
         response_json, code = Requester.create_order(belongs_to_user_id=request.user.id, text=request.data['text'], type_of_cloth=request.data['type_of_cloth'], days_for_clearing=request.data['days_for_clearing'])
         return Response(data=response_json, status=code)
 
 class ClothsView(APIView):
     def get(self, request: Request):
-        data, code = Requester.get_cloths()
+        data, code = Requester.get_cloths(request)
         return Response(data, status=code)
 
 class ConcreteClothView(APIView):
@@ -34,14 +32,14 @@ class ConcreteClothView(APIView):
 class ConcreteUserOrdersView(APIView):
     def get(self, request: Request, user_id):
         if int(user_id) == request.user.id:
-            data, code = Requester.get_concrete_user_orders(user_id=user_id)
+            data, code = Requester.get_concrete_user_orders(request,user_id=user_id)
             return Response(data, status=code)
         return Response ({'error': 'You can only check orders that belong to currently logged user'},status=400)
 
 
 class OrdersView(APIView):
     def get(self, request: Request):
-        data, code = Requester.get_orders()
+        data, code = Requester.get_orders(request=request)
         return Response(data, status=code)
 
 
