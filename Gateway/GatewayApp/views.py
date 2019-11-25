@@ -14,8 +14,10 @@ class CreateCloth(APIView):
 class CreateOrderView(APIView):
     def post(self, request : Request):
         order_data = {'text','type_of_cloth','days_for_clearing'}.intersection(request.data.keys())
-        if (len(order_data)) != 3:
-            return Response ({'error': 'Body must have text and days_for_clearing'},status=400)
+        print("Authenticated - ",request.user.is_authenticated)
+        if ((len(order_data)) != 3  or not request.user.is_authenticated):
+            print("?????")
+            return Response ({'error': 'Body must have text and days_for_clearing and user must be autheicated '},status=400)
         response_json, code = Requester.create_order(belongs_to_user_id=request.user.id, text=request.data['text'], type_of_cloth=request.data['type_of_cloth'], days_for_clearing=request.data['days_for_clearing'])
         return Response(data=response_json, status=code)
 
