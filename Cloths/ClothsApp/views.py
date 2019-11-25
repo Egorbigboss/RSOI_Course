@@ -3,30 +3,13 @@ from rest_framework import status
 from rest_framework.views import APIView, Response, Request
 from ClothsApp.serializers import ClothSerializer
 from ClothsApp.models import Cloth
-from django.db.models import Q
+from rest_framework.generics import ListCreateAPIView
 
-# Create your views here.
+class AllClothsView(ListCreateAPIView):
+    serializer_class = ClothSerializer
+    def get_queryset(self):
+        return Cloth.objects.all()
 
-class AllClothsView(APIView):
-    def get(self, request: Request):
-        return Response(ClothSerializer(instance=Cloth.objects.all(), many=True).data)
-        # try:
-        #     user_id = request.query_params['user_id']
-        # except KeyError:
-        #     return Response({'error': 'Wrong query params'}, status=status.HTTP_400_BAD_REQUEST)
-        # cloths_amount = Cloth.objects.filter(Q(belongs_to_user_id = user_id))
-        # if len(cloths_amount) == 0:
-        #     return Response(status=status.HTTP_404_NOT_FOUND)
-        # serializer = ClothSerializer(instance=cloths_amount, many=True)
-        # return Response(data=serializer.data, status=status.HTTP_200_OK)
-
-    def post(self, request : Request):
-        print(request.data)
-        serializer = ClothSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class ConcreteClothView(APIView):
     def get(self, request: Request, cloth_uuid):
