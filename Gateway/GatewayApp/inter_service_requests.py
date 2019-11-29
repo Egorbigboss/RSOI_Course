@@ -113,6 +113,26 @@ class Requester:
         return response.json(), response.status_code
 
     @staticmethod
+    def patch_concrete_order(uuid: str, data :dict):
+        response_order = Requester.send_patch_request(url = Requester.ORDERS_HOST + f'{uuid}/', data = data)
+        if response_order is None:
+            return Requester.ERROR_RETURN
+        if response_order.status_code != 200:
+            return response.json(), response.status_code
+        cloth_uuid = response_order.json()['cloth_uuid']
+        response_cloth = Requester.send_patch_request(url = Requester.CLOTHS_HOST + f'{cloth_uuid}/', data = {
+                'type_of_cloth' : response_order.json()['type_of_cloth']
+            })
+        try:
+            ord = Requester.__get_and_set_order_attachments(response_order.json())
+        except KeyError:
+            return (Requester.__create_error_order('Key error was raised, no cloth uuid in order json!'),
+                    500)
+        except (ClothGetError) as e:
+            return e.err_msg, e.code
+        return ord, 200
+
+    @staticmethod
     def __get_and_set_order_cloth(order: Dict):
         cloth_uuid = order['cloth_uuid']
         if cloth_uuid is not None:
@@ -241,7 +261,6 @@ class Requester:
     @staticmethod
     def create_delivery_list(request,user_id):
         url=Requester.DELIVERY_HOST + f'user/{user_id}/'
-        print(url)
         response,code = Requester.get_concrete_user_orders(request,user_id=user_id)
         if code != 200:
             return response, response.status_code
@@ -254,7 +273,6 @@ class Requester:
                     'days_for_clearing': ord['cloth']['days_for_clearing']
                 })
                 ans.append(cur_json.json())
-        print(ans)
         return ans, status.HTTP_200_OK
 
 
@@ -272,6 +290,6 @@ class Requester:
         except KeyError:
             return (Requester.__create_error_order('Key error was raised, no cloth uuid in order json!'),
                     500)
-        except (ClothGetError, AudioGetError) as e:
+        except (ClothGetError) as e:
             return e.err_msg, e.code
         return ans, 200
