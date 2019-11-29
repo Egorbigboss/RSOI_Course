@@ -11,6 +11,7 @@ class OrderSerializer(serializers.ModelSerializer):
             'text',
             'type_of_cloth',
             'cloth_uuid',
+            'date_of_creation'
         ]
 
     def create(self, validated_data):
