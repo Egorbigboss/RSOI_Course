@@ -1,3 +1,5 @@
 from django.contrib import admin
+from DeliveryApp.models import DeliveryList
 
-# Register your models here.
+
+admin.site.register(DeliveryList)
