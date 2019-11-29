@@ -27,7 +27,7 @@ class ConcreteOrderView(APIView):
              order = Order.objects.get(pk=order_uuid)
          except Order.DoesNotExist:
              return Response(status=status.HTTP_404_NOT_FOUND)
-         serializer = orderSerializer(instance=orders_amount)
+         serializer = orderSerializer(instance=order)
          return Response(data=serializer.data, status=status.HTTP_200_OK)
 
     def delete(self, request: Request, order_uuid):
