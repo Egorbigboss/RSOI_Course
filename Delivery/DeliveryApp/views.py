@@ -35,8 +35,8 @@ class ConcreteUserDeliveryView(ListCreateAPIView):
 class ConcreteDeliveryView(APIView):
     def get(self, request: Request, uuid):
          try:
-             order = Delivery.objects.get(pk=uuid)
-         except DeilveryList.DoesNotExist:
+             order = DeliveryList.objects.get(pk=uuid)
+         except DeliveryList.DoesNotExist:
              return Response(status=status.HTTP_404_NOT_FOUND)
          serializer = DeliverySerializer(instance=order)
          return Response(data=serializer.data, status=status.HTTP_200_OK)
@@ -44,8 +44,8 @@ class ConcreteDeliveryView(APIView):
 
     def delete(self, request: Request, uuid):
          try:
-             delivery = DeilveryList.objects.get(pk=uuid)
-         except DeilveryList.DoesNotExist:
+             delivery = DeliveryList.objects.get(pk=uuid)
+         except DeliveryList.DoesNotExist:
              return Response(status=status.HTTP_404_NOT_FOUND)
          delivery.delete()
          return Response(status=status.HTTP_204_NO_CONTENT)
