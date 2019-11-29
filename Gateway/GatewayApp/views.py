@@ -11,7 +11,6 @@ class CreateClothView(APIView):
         response_json, code = Requester.create_cloth(type_of_cloth=request.data['type_of_cloth'], days_for_clearing=request.data['days_for_clearing'])
         return Response(data=response_json, status=code)
 
-
 class CreateOrderView(APIView):
     def post(self, request : Request):
         order_data = {'text','type_of_cloth','days_for_clearing'}.intersection(request.data.keys())
@@ -62,6 +61,10 @@ class OrdersView(APIView):
 
 
 class ConcreteOrderView(APIView):
-    def get(self, request: Request, image_uuid):
-        data, code = Requester.get_concrete_order(str(image_uuid))
+    def get(self, request: Request, order_uuid):
+        data, code = Requester.get_concrete_order(str(order_uuid))
         return Response(data, status=code)
+
+    def patch(self, request : Request, order_uuid):
+        response_json, code = Requester.patch_concrete_order(order_uuid, data=request.data)
+        return Response(data=response_json, status=code)
