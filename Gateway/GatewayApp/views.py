@@ -36,6 +36,19 @@ class ConcreteUserOrdersView(APIView):
             return Response(data, status=code)
         return Response ({'error': 'You can only check orders that belong to currently logged user'},status=400)
 
+class ConcreteUserDeliveryView(APIView):
+    def get(self, request: Request, user_id):
+        if int(user_id) == request.user.id:
+            data, code = Requester.get_concrete_user_delivery(request,user_id=user_id)
+            return Response(data, status=code)
+        return Response ({'error': 'You can only check delivery status that belong to currently logged user'},status=400)
+
+class CreateDeliveryList(APIView):
+    def post(self, request: Request):
+        if request.user.is_authenticated:
+            data, code = Requester.create_delivery_list(request,user_id=request.user.id)
+            return Response(data, status=code)
+        return Response ({'error': 'You can only init delivery list that belongs to currently logged user'},status=400)
 
 class OrdersView(APIView):
     def get(self, request: Request):
