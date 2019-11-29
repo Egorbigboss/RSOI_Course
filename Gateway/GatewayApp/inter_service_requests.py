@@ -2,6 +2,7 @@ import requests
 import json
 import re
 from typing import Tuple, Dict, List, Union, Any
+from rest_framework import status
 
 class ClothGetError(Exception):
      def __init__(self, code: int, err_json: Dict):
@@ -15,6 +16,8 @@ class Requester:
     ORDERS_HOST = 'http://127.0.0.1:8001/api/orders/'
     CLOTHS_HOST = 'http://127.0.0.1:8002/api/cloths/'
     ERROR_RETURN = (json.dumps({'error': 'BaseHTTPError was raised!'}), 500)
+    DELIVERY_HOST = 'http://127.0.0.1:8003/api/delivery/'
+    DELIVERY_URL = 'http://127.0.0.1:8000/api/delivery/'
 
 
 
@@ -146,7 +149,7 @@ class Requester:
         l_o = Requester.get_limit_offset_from_request(request)
         if l_o is not None:
             url += f'?&limit={l_o[0]}&offset={l_o[1]}'
-        response = Requester.send_get_request(url)
+        # response = Requester.send_get_request(url)
         if response is None:
             return Requester.ERROR_RETURN
         if response.status_code != 200:
@@ -201,6 +204,42 @@ class Requester:
                 except (ClothGetError) as e:
                     return e.err_msg, e.code
         return response_json, 200
+
+    def get_concrete_user_delivery(request,user_id):
+        url = Requester.DELIVERY_HOST + f'user/{user_id}/'
+        cur_url = Requester.DELIVERY_URL + f'user/{user_id}/'
+        response = Requester.send_get_request(url)
+        l_o = Requester.get_limit_offset_from_request(request)
+        if l_o is not None:
+            url += f'?&limit={l_o[0]}&offset={l_o[1]}'
+        if response is None:
+            return Requester.ERROR_RETURN
+        if response.status_code != 200:
+            return response.json(), response.status_code
+        response_json = Requester.next_and_prev_links_to_params(response.json(),cur_url)
+        return response_json, 200
+
+
+    @staticmethod
+    def create_delivery_list(request,user_id):
+        url=Requester.DELIVERY_HOST + f'user/{user_id}/'
+        print(url)
+        response,code = Requester.get_concrete_user_orders(request,user_id=user_id)
+        if code != 200:
+            return response, response.status_code
+        ans = []
+        for ord in response:
+                cur_json = Requester.send_post_request(url=url, data = {
+                    'user_id' : user_id,
+                    'order_uuid' : ord['uuid'],
+                    'date_of_creation' : ord['date_of_creation'],
+                    'days_for_clearing': ord['cloth']['days_for_clearing']
+                })
+                ans.append(cur_json.json())
+        print(ans)
+        return ans, status.HTTP_200_OK
+
+
 
     @staticmethod
     def get_concrete_order(uuid: str):
