@@ -73,6 +73,14 @@ class Requester:
         return response
 
     @staticmethod
+    def send_patch_request(url: str, data: dict):
+        try:
+            response = requests.patch(url=url, json=data)
+        except (requests.exceptions.BaseHTTPError):
+            return None
+        return response
+
+    @staticmethod
     def get_cloths(request):
         url = Requester.CLOTHS_HOST + f'all/'
         cur_url = Requester.CLOTHS_URL
@@ -88,6 +96,16 @@ class Requester:
     @staticmethod
     def get_concrete_cloth(uuid: str):
         response = Requester.send_get_request(Requester.CLOTHS_HOST + f'{uuid}/')
+        if response is None:
+            return Requester.ERROR_RETURN
+        if response.status_code != 200:
+            return response.json(), response.status_code
+        return response.json(), response.status_code
+
+
+    @staticmethod
+    def patch_concrete_cloth(uuid: str, data : dict):
+        response = Requester.send_patch_request(url = Requester.CLOTHS_HOST + f'{uuid}/', data = data)
         if response is None:
             return Requester.ERROR_RETURN
         if response.status_code != 200:
