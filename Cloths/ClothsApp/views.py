@@ -16,25 +16,31 @@ class ConcreteClothView(APIView):
         try:
             return Cloth.objects.get(pk=pk)
         except Cloth.DoesNotExist:
-             return Response(status=status.HTTP_404_NOT_FOUND)
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
     def get(self, request: Request, cloth_uuid):
-         cloth = self.get_object(cloth_uuid)
+         try:
+            cloth = Cloth.objects.get(pk=cloth_uuid)
+         except Cloth.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
          serializer = ClothSerializer(instance=cloth)
          return Response(data=serializer.data, status=status.HTTP_200_OK)
 
     def delete(self, request: Request, cloth_uuid):
          try:
-             cloth = self.get_object(pk)
+             cloth = Cloth.objects.get(pk=cloth_uuid)
          except Cloth.DoesNotExist:
              return Response(status=status.HTTP_404_NOT_FOUND)
          cloth.delete()
          return Response(status=status.HTTP_204_NO_CONTENT)
 
     def patch(self, request: Request, cloth_uuid):
-        cloth = self.get_object(cloth_uuid)
+        try:
+           cloth = Cloth.objects.get(pk=cloth_uuid)
+        except Cloth.DoesNotExist:
+           return Response(status=status.HTTP_404_NOT_FOUND)
         serializer = ClothSerializer(instance=cloth, data=request.data, partial=True) # set partial=True to update a data partially
         if serializer.is_valid():
             serializer.save()
             return Response(data=serializer.data, status=status.HTTP_200_OK)
-        return Response(status=status.HTTP_404_NOT_FOUND)
+        return Response(status=status.HTTP_400_NOT_FOUND)
