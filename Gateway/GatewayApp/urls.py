@@ -4,7 +4,7 @@ from GatewayApp import views
 
 urlpatterns = [
      url(r'^cloths/$', views.ClothsView.as_view()),
-     url(r'^cloths/create/$',views.CreateCloth.as_view()),
+     url(r'^cloths/create/$',views.CreateClothView.as_view()),
      url(r'^cloths/(?P<cloth_uuid>[0-9a-f-]+)/$',
          views.ConcreteClothView.as_view()),
 
