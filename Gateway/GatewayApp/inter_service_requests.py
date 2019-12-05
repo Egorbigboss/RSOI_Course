@@ -15,10 +15,10 @@ class Requester:
     CLOTHS_URL = 'http://127.0.0.1:8000/api/cloths/'
     ORDERS_HOST = 'http://127.0.0.1:8001/api/orders/'
     CLOTHS_HOST = 'http://127.0.0.1:8002/api/cloths/'
-    ERROR_RETURN = (json.dumps({'error': 'BaseHTTPError was raised!'}), 500)
     DELIVERY_HOST = 'http://127.0.0.1:8003/api/delivery/'
     DELIVERY_URL = 'http://127.0.0.1:8000/api/delivery/'
-
+    ERROR_RETURN = (json.dumps({'error': 'BaseHTTPError was raised!'}), 500)
+    ERROR_CREATE = (json.dumps({'error': 'Connection refused by one of the services!'}), 500)
 
 
     def get_limit_offset_from_request(request):
@@ -81,6 +81,24 @@ class Requester:
         return response
 
     @staticmethod
+    def send_delete_request(url: str):
+        try:
+            response = requests.delete(url=url)
+        except requests.exceptions.BaseHTTPError:
+            return None
+        return response
+
+
+
+    @staticmethod
+    def delete_cloth(request , cloth_uuid: str):
+        try:
+            response = Requester.send_delete_request(Requester.CLOTHS_HOST + f'{cloth_uuid}')
+        except (requests.exceptions.BaseHTTPError):
+            return None
+        return response.status_code
+
+    @staticmethod
     def get_cloths(request):
         url = Requester.CLOTHS_HOST + f'all/'
         cur_url = Requester.CLOTHS_URL
@@ -117,7 +135,7 @@ class Requester:
         response_order = Requester.send_patch_request(url = Requester.ORDERS_HOST + f'{uuid}/', data = data)
         if response_order is None:
             return Requester.ERROR_RETURN
-        if response_order.status_code != 200:
+        if response_order.status_code != 204:
             return response.json(), response.status_code
         cloth_uuid = response_order.json()['cloth_uuid']
         response_cloth = Requester.send_patch_request(url = Requester.CLOTHS_HOST + f'{cloth_uuid}/', data = {
@@ -165,22 +183,41 @@ class Requester:
         return response.json(), response.status_code
 
     @staticmethod
-    def create_order(type_of_cloth: str, belongs_to_user_id: str, text: str, days_for_clearing: int):
+    def create_order(request, type_of_cloth: str, belongs_to_user_id: str, text: str, days_for_clearing: int):
         response_json, code = Requester.create_cloth(type_of_cloth=type_of_cloth, days_for_clearing=days_for_clearing)
         if code == 201:
             cloth_uuid = response_json['uuid']
-            response = Requester.send_post_request(url=Requester.ORDERS_HOST + f'user/{belongs_to_user_id}/', data={
-                'text' : text,
-                'belongs_to_user_id' : belongs_to_user_id,
-                'type_of_cloth' : type_of_cloth,
-                'cloth_uuid' : cloth_uuid
-            })
-            return response.json(), response.status_code
+            try:
+                response = Requester.send_post_request(url=Requester.ORDERS_HOST + f'user/{belongs_to_user_id}/', data={
+                    'text' : text,
+                    'belongs_to_user_id' : belongs_to_user_id,
+                    'type_of_cloth' : type_of_cloth,
+                    'cloth_uuid' : cloth_uuid
+                })
+                if response is None:
+                    try:
+                        response = Requester.delete_cloth(request , cloth_uuid)
+                    except KeyError:
+                        pass
+                    return Requester.ERROR_RETURN
+                if response.status_code != 201:
+                    try:
+                        response = Requester.delete_cloth(request , cloth_uuid)
+                    except KeyError:
+                        pass
+                    return Requester.ERROR_RETURN
+                return response.json(), response.status_code
+            except requests.exceptions.RequestException as e:
+                try:
+                    response = Requester.delete_cloth(request , cloth_uuid)
+                except KeyError:
+                    pass
+                return Requester.ERROR_CREATE
         else:
             return response_json, code
 
     @staticmethod
-    def get_concrete_user_orders(request,user_id):
+    def get_concrete_user_orders(request,user_id: int):
         url = Requester.ORDERS_HOST + f'user/{user_id}/'
         cur_url = Requester.ORDERS_URL + f'user/{user_id}/'
         response = Requester.send_get_request(url)
@@ -197,7 +234,7 @@ class Requester:
             for ord in response_json['results']:
                 try:
                     ord = Requester.__get_and_set_order_attachments(ord)
-                except (ClothGetError) as e:
+                except requests.exceptions.RequestException as e:
                     ord['cloth'] = None
                 except KeyError:
                     return (Requester.__create_error_order('Key error was raised, no cloth uuid in order json!'),
@@ -206,7 +243,7 @@ class Requester:
             for ord in response_json:
                 try:
                     ord = Requester.__get_and_set_order_attachments(ord)
-                except (ClothGetError) as e:
+                except requests.exceptions.RequestException as e:
                     ord['cloth'] = None
                 except KeyError:
                     return (Requester.__create_error_order('Key error was raised, no cloth uuid in order json!'),
@@ -227,7 +264,7 @@ class Requester:
             for ord in response_json['results']:
                 try:
                     ord = Requester.__get_and_set_order_attachments(ord)
-                except (ClothGetError) as e:
+                except requests.exceptions.RequestException as e:
                     ord['cloth'] = None
                 except KeyError:
                     return (Requester.__create_error_order('Key error was raised, no cloth uuid in order json!'),
@@ -236,14 +273,14 @@ class Requester:
             for ord in response_json:
                 try:
                     ord = Requester.__get_and_set_order_attachments(ord)
-                except (ClothGetError) as e:
+                except requests.exceptions.RequestException as e:
                     ord['cloth'] = None
                 except KeyError:
                     return (Requester.__create_error_order('Key error was raised, no cloth uuid in order json!'),
                             500)
         return response_json, 200
 
-    def get_concrete_user_delivery(request,user_id):
+    def get_concrete_user_delivery(request,user_id: int):
         url = Requester.DELIVERY_HOST + f'user/{user_id}/'
         cur_url = Requester.DELIVERY_URL + f'user/{user_id}/'
         response = Requester.send_get_request(url)
@@ -259,7 +296,7 @@ class Requester:
 
 
     @staticmethod
-    def create_delivery_list(request,user_id):
+    def create_delivery_list(request, user_id: int ):
         url=Requester.DELIVERY_HOST + f'user/{user_id}/'
         response,code = Requester.get_concrete_user_orders(request,user_id=user_id)
         if code != 200:
