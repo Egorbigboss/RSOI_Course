@@ -197,20 +197,20 @@ class Requester:
             for ord in response_json['results']:
                 try:
                     ord = Requester.__get_and_set_order_attachments(ord)
+                except (ClothGetError) as e:
+                    ord['cloth'] = None
                 except KeyError:
                     return (Requester.__create_error_order('Key error was raised, no cloth uuid in order json!'),
                             500)
-                except (ClothGetError) as e:
-                    return e.err_msg, e.code
         else:
             for ord in response_json:
                 try:
                     ord = Requester.__get_and_set_order_attachments(ord)
+                except (ClothGetError) as e:
+                    ord['cloth'] = None
                 except KeyError:
                     return (Requester.__create_error_order('Key error was raised, no cloth uuid in order json!'),
                             500)
-                except (ClothGetError) as e:
-                    return e.err_msg, e.code
         return response_json, 200
 
     @staticmethod
@@ -227,20 +227,20 @@ class Requester:
             for ord in response_json['results']:
                 try:
                     ord = Requester.__get_and_set_order_attachments(ord)
+                except (ClothGetError) as e:
+                    ord['cloth'] = None
                 except KeyError:
                     return (Requester.__create_error_order('Key error was raised, no cloth uuid in order json!'),
                             500)
-                except (ClothGetError) as e:
-                    return e.err_msg, e.code
         else:
             for ord in response_json:
                 try:
                     ord = Requester.__get_and_set_order_attachments(ord)
+                except (ClothGetError) as e:
+                    ord['cloth'] = None
                 except KeyError:
                     return (Requester.__create_error_order('Key error was raised, no cloth uuid in order json!'),
                             500)
-                except (ClothGetError) as e:
-                    return e.err_msg, e.code
         return response_json, 200
 
     def get_concrete_user_delivery(request,user_id):
