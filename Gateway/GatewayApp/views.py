@@ -26,7 +26,7 @@ class ClothsView(APIView):
 
 class ConcreteClothView(APIView):
     def get(self, request: Request, cloth_uuid):
-        data, code = Requester.get_concrete_cloth(str(Cloth_uuid))
+        data, code = Requester.get_concrete_cloth(str(cloth_uuid))
         return Response(data, status=code)
 
     def patch(self, request : Request, cloth_uuid):
