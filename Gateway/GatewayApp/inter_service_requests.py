@@ -3,7 +3,7 @@ import json
 import re
 import pybreaker
 import redis
-from GatewayApp.queue import ReqQueue
+from GatewayApp.my_queue import ReqQueue
 from GatewayApp.requests_lib import Requests
 
 from typing import Tuple, Dict, List, Union, Any
@@ -123,12 +123,13 @@ class Requester:
         except ValueError:
             return Requester.ERROR_RETURN
         cloth_uuid = response_order.json()['cloth_uuid']
+        print("tut?")
         try:
             response_cloth = Requests.send_patch_request(url = Requester.CLOTHS_HOST + f'{cloth_uuid}/', data = {
                     'type_of_cloth' : response_order.json()['type_of_cloth']
                 })
         except ValueError:
-            ReqQueue.add_patch_task(url = Requester.CLOTHS_HOST + f'{cloth_uuid}/', data = {
+            ReqQueue.add_patch_task_to_queue(url = Requester.CLOTHS_HOST + f'{cloth_uuid}/', data = {
                     'type_of_cloth' : response_order.json()['type_of_cloth']
                 })
             return Requester.ERROR_RETURN[0], 200
@@ -138,6 +139,7 @@ class Requester:
             return (Requester.__create_error_order('Key error was raised, no cloth uuid in order json!'), 500)
         except (ClothGetError) as e:
             return e.err_msg, e.code
+        ReqQueue.unqueue_tasks_from_queue()
         return ord, 200
 
     @staticmethod
@@ -210,7 +212,7 @@ class Requester:
                     ord = Requester.__get_and_set_order_cloth(ord)
                 except ValueError:
                     ord['cloth'] = None
-                except KeyError:
+                except ClothGetError:
                     return (Requester.__create_error_order('Key error was raised, no cloth uuid in order json!'),
                             500)
         else:
@@ -219,7 +221,7 @@ class Requester:
                     ord = Requester.__get_and_set_order_cloth(ord)
                 except ValueError:
                     ord['cloth'] = None
-                except KeyError:
+                except ClothGetError:
                     return (Requester.__create_error_order('Key error was raised, no cloth uuid in order json!'),
                             500)
         return response_json, 200
@@ -241,7 +243,7 @@ class Requester:
                     ord = Requester.__get_and_set_order_cloth(ord)
                 except ValueError:
                     ord['cloth'] = None
-                except KeyError:
+                except ClothGetError:
                     return (Requester.__create_error_order('Key error was raised, no cloth uuid in order json!'),
                             500)
         else:
@@ -250,7 +252,7 @@ class Requester:
                     ord = Requester.__get_and_set_order_cloth(ord)
                 except ValueError:
                     ord['cloth'] = None
-                except KeyError:
+                except ClothGetError:
                     return (Requester.__create_error_order('Key error was raised, no cloth uuid in order json!'),
                             500)
         return response_json, 200
