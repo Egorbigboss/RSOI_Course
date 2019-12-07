@@ -3,8 +3,8 @@ import json
 import re
 import pybreaker
 import redis
-from queue import ReqQueue
-
+from GatewayApp.queue import ReqQueue
+from GatewayApp.requests_lib import Requests
 
 from typing import Tuple, Dict, List, Union, Any
 from rest_framework import status
@@ -16,12 +16,6 @@ class ClothGetError(Exception):
          self.err_msg = err_json
 
 class Requester:
-    redis = redis.StrictRedis()
-    db_breaker = pybreaker.CircuitBreaker(
-        fail_max=5,
-        reset_timeout=15,
-        state_storage=pybreaker.CircuitRedisStorage(pybreaker.STATE_CLOSED, redis)
-        )
 
     ORDERS_URL = 'http://127.0.0.1:8000/api/orders/'
     CLOTHS_URL = 'http://127.0.0.1:8000/api/cloths/'
@@ -72,75 +66,9 @@ class Requester:
         return data
 
     @staticmethod
-    def get_request(url: str):
-        try:
-            response = requests.get(url)
-        except (requests.exceptions.BaseHTTPError, requests.ConnectionError):
-            return None
-        return response
-
-    @staticmethod
-    def post_request(url: str, data: dict):
-        try:
-            response = requests.post(url, data)
-        except (requests.exceptions.BaseHTTPError, requests.ConnectionError):
-            return None
-        return response
-
-    @staticmethod
-    def patch_request(url: str, data: dict):
-        try:
-            response = requests.patch(url, data)
-        except (requests.exceptions.BaseHTTPError, requests.ConnectionError):
-            return None
-        return response
-
-    @staticmethod
-    def delete_request(url: str):
-        try:
-            response = requests.delete(url)
-        except (requests.exceptions.BaseHTTPError, requests.ConnectionError):
-            return None
-        return response
-
-
-    # @staticmethod
-    @db_breaker
-    def send_post_request(url: str, data: dict):
-        response = Requester.post_request(url, data)
-        if response is None:
-            raise ValueError
-        return response
-
-
-    # @staticmethod
-    @db_breaker
-    def send_get_request(url: str):
-        response = Requester.get_request(url)
-        if response is None:
-            raise ValueError
-        return response
-
-    # @staticmethod
-    @db_breaker
-    def send_patch_request(url: str, data: dict):
-        response = Requester.patch_request(url, data)
-        if response is None:
-            raise ValueError
-        return response
-
-    # @staticmethod
-    @db_breaker
-    def send_delete_request(url: str):
-        response = Requester.delete_request(url)
-        if response is None:
-            raise ValueError
-        return response
-
-    @staticmethod
     def delete_cloth(request , cloth_uuid: str):
         try:
-            response = Requester.send_delete_request(Requester.CLOTHS_HOST + f'{cloth_uuid}')
+            response = Requests.send_delete_request(Requester.CLOTHS_HOST + f'{cloth_uuid}')
         except requests.exceptions.BaseHTTPError:
             return None
         return response.status_code
@@ -153,7 +81,7 @@ class Requester:
         if l_o is not None:
             url += f'?&limit={l_o[0]}&offset={l_o[1]}'
         try:
-            response = Requester.send_get_request(url)
+            response = Requests.send_get_request(url)
         except pybreaker.CircuitBreakerError:
             return Requester.pybreaker_error()
         except ValueError:
@@ -164,7 +92,7 @@ class Requester:
     @staticmethod
     def get_concrete_cloth(uuid: str):
         try:
-            response = Requester.send_get_request(Requester.CLOTHS_HOST + f'{uuid}/')
+            response = Requests.send_get_request(Requester.CLOTHS_HOST + f'{uuid}/')
         except pybreaker.CircuitBreakerError:
             return Requester.pybreaker_error()
         except ValueError:
@@ -177,7 +105,7 @@ class Requester:
     @staticmethod
     def patch_concrete_cloth(uuid: str, data : dict):
         try:
-            response = Requester.send_patch_request(url = Requester.CLOTHS_HOST + f'{uuid}/', data = data)
+            response = Requests.send_patch_request(url = Requester.CLOTHS_HOST + f'{uuid}/', data = data)
         except pybreaker.CircuitBreakerError:
             return Requester.pybreaker_error()
         except ValueError:
@@ -189,22 +117,21 @@ class Requester:
     @staticmethod
     def patch_concrete_order(uuid: str, data :dict):
         try:
-            response_order = Requester.send_patch_request(url = Requester.ORDERS_HOST + f'{uuid}/', data = data)
+            response_order = Requests.send_patch_request(url = Requester.ORDERS_HOST + f'{uuid}/', data = data)
             if response_order.status_code != 200:
                 return response_order.json(), response_order.status_code
-        except pybreaker.CircuitBreakerError:
-            return Requester.pybreaker_error()
         except ValueError:
             return Requester.ERROR_RETURN
         cloth_uuid = response_order.json()['cloth_uuid']
         try:
-            response_cloth = Requester.send_patch_request(url = Requester.CLOTHS_HOST + f'{cloth_uuid}/', data = {
+            response_cloth = Requests.send_patch_request(url = Requester.CLOTHS_HOST + f'{cloth_uuid}/', data = {
                     'type_of_cloth' : response_order.json()['type_of_cloth']
                 })
         except ValueError:
             ReqQueue.add_patch_task(url = Requester.CLOTHS_HOST + f'{cloth_uuid}/', data = {
                     'type_of_cloth' : response_order.json()['type_of_cloth']
                 })
+            return Requester.ERROR_RETURN[0], 200
         try:
             ord = Requester.__get_and_set_order_cloth(response_order.json())
         except KeyError:
@@ -228,7 +155,7 @@ class Requester:
     @staticmethod
     def create_cloth(type_of_cloth: str, days_for_clearing: int):
         try:
-            response = Requester.send_post_request(url=Requester.CLOTHS_HOST + 'all/', data={
+            response = Requests.send_post_request(url=Requester.CLOTHS_HOST + 'all/', data={
                 'type_of_cloth' : type_of_cloth,
                 'days_for_clearing' : days_for_clearing
             })
@@ -242,7 +169,7 @@ class Requester:
         if code == 201:
             cloth_uuid = response_json['uuid']
             try:
-                response = Requester.send_post_request(url=Requester.ORDERS_HOST + f'user/{belongs_to_user_id}/', data={
+                response = Requests.send_post_request(url=Requester.ORDERS_HOST + f'user/{belongs_to_user_id}/', data={
                     'text' : text,
                     'belongs_to_user_id' : belongs_to_user_id,
                     'type_of_cloth' : type_of_cloth,
@@ -268,7 +195,7 @@ class Requester:
         url = Requester.ORDERS_HOST + f'user/{user_id}/'
         cur_url = Requester.ORDERS_URL + f'user/{user_id}/'
         try:
-            response = Requester.send_get_request(url)
+            response = Requests.send_get_request(url)
         except ValueError:
             return Requester.ERROR_RETURN
         l_o = Requester.get_limit_offset_from_request(request)
@@ -304,7 +231,7 @@ class Requester:
         if l_o is not None:
             url += f'?&limit={l_o[0]}&offset={l_o[1]}'
         try:
-            response = Requester.send_get_request(url)
+            response = Requests.send_get_request(url)
         except ValueError:
             return Requester.ERROR_RETURN
         response_json = Requester.next_and_prev_links_to_params(response.json(),Requester.ORDERS_URL)
@@ -332,7 +259,7 @@ class Requester:
         url = Requester.DELIVERY_HOST + f'user/{user_id}/'
         cur_url = Requester.DELIVERY_URL + f'user/{user_id}/'
         try:
-            response = Requester.send_get_request(url)
+            response = Requests.send_get_request(url)
         except pybreaker.CircuitBreakerError:
             return Requester.pybreaker_error()
         l_o = Requester.get_limit_offset_from_request(request)
@@ -355,7 +282,7 @@ class Requester:
         ans = []
         for ord in response:
             try:
-                cur_json = Requester.send_post_request(url=url, data = {
+                cur_json = Requests.send_post_request(url=url, data = {
                     'user_id' : user_id,
                     'order_uuid' : ord['uuid'],
                     'date_of_creation' : ord['date_of_creation'],
@@ -371,7 +298,7 @@ class Requester:
     @staticmethod
     def get_concrete_order(uuid: str):
         try:
-            response = Requester.send_get_request(Requester.ORDERS_HOST + f'{uuid}/')
+            response = Requests.send_get_request(Requester.ORDERS_HOST + f'{uuid}/')
             response_json = response.json()
             try:
                 ans = Requester.__get_and_set_order_cloth(response_json)
