@@ -16,7 +16,7 @@ class CreateOrderView(APIView):
         order_data = {'text','type_of_cloth','days_for_clearing'}.intersection(request.data.keys())
         if ((len(order_data)) != 3  or not request.user.is_authenticated):
             return Response ({'error': 'Body must have text and days_for_clearing and user must be autheicated '},status=400)
-        response_json, code = Requester.create_order(belongs_to_user_id=request.user.id, text=request.data['text'], type_of_cloth=request.data['type_of_cloth'], days_for_clearing=request.data['days_for_clearing'])
+        response_json, code = Requester.create_order(request, belongs_to_user_id=request.user.id, text=request.data['text'], type_of_cloth=request.data['type_of_cloth'], days_for_clearing=request.data['days_for_clearing'])
         return Response(data=response_json, status=code)
 
 class ClothsView(APIView):
@@ -26,7 +26,7 @@ class ClothsView(APIView):
 
 class ConcreteClothView(APIView):
     def get(self, request: Request, cloth_uuid):
-        data, code = Requester.get_concrete_cloth(str(Cloth_uuid))
+        data, code = Requester.get_concrete_cloth(str(cloth_uuid))
         return Response(data, status=code)
 
     def patch(self, request : Request, cloth_uuid):
