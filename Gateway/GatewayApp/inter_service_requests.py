@@ -34,6 +34,10 @@ class Requester:
     def __create_error_order(msg: str):
         return json.dumps({'error': msg})
 
+    @staticmethod
+    def __delete_error_cloth(msg: str):
+        return json.dumps({'error': msg})
+
 
     def get_limit_offset_from_request(request):
         try:
@@ -66,12 +70,15 @@ class Requester:
         return data
 
     @staticmethod
-    def delete_cloth(request , cloth_uuid: str):
+    def delete_concrete_cloth(request , cloth_uuid: str):
         try:
             response = Requests.send_delete_request(Requester.CLOTHS_HOST + f'{cloth_uuid}')
+            print(response.status_code)
+            if response.status_code != 204:
+                return Requester.__delete_error_cloth('Cloth was already deleted or does not exist!'), 500
         except requests.exceptions.BaseHTTPError:
             return None
-        return response.status_code
+        return Requester.__delete_error_cloth('Cloth was successfully deleted!'), response.status_code
 
     @staticmethod
     def get_cloths(request):
@@ -123,7 +130,6 @@ class Requester:
         except ValueError:
             return Requester.ERROR_RETURN
         cloth_uuid = response_order.json()['cloth_uuid']
-        print("tut?")
         try:
             response_cloth = Requests.send_patch_request(url = Requester.CLOTHS_HOST + f'{cloth_uuid}/', data = {
                     'type_of_cloth' : response_order.json()['type_of_cloth']
@@ -179,13 +185,13 @@ class Requester:
                 })
                 if response.status_code != 201:
                     try:
-                        response = Requester.delete_cloth(request , cloth_uuid)
+                        response = Requester.delete_concrete_cloth(request , cloth_uuid)
                     except KeyError:
                         pass
                     return Requester.ERROR_RETURN
             except ValueError:
                 try:
-                    response = Requester.delete_cloth(request , cloth_uuid)
+                    response = Requester.delete_concrete_cloth(request , cloth_uuid)
                 except KeyError:
                     pass
                 return Requester.ERROR_RETURN

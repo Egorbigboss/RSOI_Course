@@ -9,9 +9,7 @@ https://docs.djangoproject.com/en/2.2/howto/deployment/wsgi/
 
 import os
 
-path = '/Users/evedyashkin/lab_2/RSOI_Lab2/Gateway/Gateway'
-if path not in sys.path:
-    sys.path.append(path)
+
 
 
 from django.core.wsgi import get_wsgi_application
