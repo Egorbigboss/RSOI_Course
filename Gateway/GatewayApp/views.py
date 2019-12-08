@@ -66,9 +66,7 @@ class ConcreteClothView(APIView):
         return Response(data=response_json, status=code)
 
     def delete(self, request: Request, cloth_uuid):
-        response_json, code = Requester.delete_concrete_cloth(
-            request, cloth_uuid=cloth_uuid
-        )
+        response_json, code = Requester.delete_concrete_cloth(cloth_uuid=cloth_uuid)
         return Response(data=response_json, status=code)
 
 
