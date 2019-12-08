@@ -1,7 +1,7 @@
 import axios from "axios";
 import { createMessage } from "./messages";
 
-import { GET_CLOTHS, DELETE_CLOTH, ADD_CLOTH, GET_ORDERS, GET_ERRORS } from "./types";
+import { GET_CLOTHS, DELETE_CLOTH, ADD_CLOTH, GET_ERRORS } from "./types";
 
 //GET_CLOTHS
 export const getCloths = () => dispatch => {
@@ -14,6 +14,7 @@ export const getCloths = () => dispatch => {
             });
         })
         .catch(err => console.log(err));
+    console.log("Menya zvali");
 };
 
 
@@ -34,7 +35,7 @@ export const deleteCloth = (uuid) => dispatch => {
 //ADD_CLOTH
 export const addCloth = cloth => dispatch => {
     axios
-        .post("/api/cloths/create/", cloth)
+        .post("/api/cloths/", cloth)
         .then(res => {
             dispatch(createMessage({ clothAdded: 'Cloth was succesfully added!' }));
             dispatch({
@@ -55,15 +56,3 @@ export const addCloth = cloth => dispatch => {
 
 };
 
-//GET_ORDERS
-export const getOrders = () => dispatch => {
-    axios
-        .get("/api/orders/")
-        .then(res => {
-            dispatch({
-                type: GET_ORDERS,
-                payload: res.data
-            });
-        })
-        .catch(err => console.log(err));
-};

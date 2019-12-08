@@ -1,11 +1,11 @@
 import React, { Component, Fragment } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
-import { getCloths, deleteCloth } from '../../actions/gateways';
+import { getCloths, deleteCloth } from '../../actions/cloths';
 
-export class Gateways extends Component {
+export class Cloths extends Component {
     static propTypes = {
-        gateways: PropTypes.array.isRequired,
+        cloths: PropTypes.array.isRequired,
         getCloths: PropTypes.func.isRequired,
         deleteCloth: PropTypes.func.isRequired
     };
@@ -22,14 +22,14 @@ export class Gateways extends Component {
                         <table className="table table-striped">
                             <thead>
                                 <tr>
-                                    <th>uuid</th>
-                                    <th>type_of_cloth</th>
-                                    <th>days_for_clearing</th>
+                                    <th>UUID</th>
+                                    <th>Type of cloth</th>
+                                    <th>Days for clearing</th>
                                     <th />
                                 </tr>
                             </thead>
                             <tbody>
-                                {this.props.gateways.map(cloth => (
+                                {this.props.cloths.map(cloth => (
                                     <tr key={cloth.uuid}>
                                         <td>{cloth.uuid}</td>
                                         <td>{cloth.type_of_cloth}</td>
@@ -51,9 +51,9 @@ export class Gateways extends Component {
 }
 
 const mapStateToProps = state => ({
-    gateways: state.gateways.gateways
+    cloths: state.cloths.cloths
 })
 
 
 export default connect(mapStateToProps, { getCloths, deleteCloth })
-    (Gateways);
+    (Cloths);

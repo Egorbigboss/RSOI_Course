@@ -1,7 +1,7 @@
 import { GET_CLOTHS, DELETE_CLOTH, ADD_CLOTH } from "../actions/types.js"
 
 const initialState = {
-    gateways: []
+    cloths: []
 };
 
 
@@ -11,17 +11,17 @@ export default function (state = initialState, action) {
         case GET_CLOTHS:
             return {
                 ...state,
-                gateways: action.payload
+                cloths: action.payload
             }
         case DELETE_CLOTH:
             return {
                 ...state,
-                gateways: state.gateways.filter(cloth => cloth.uuid !== action.payload)
+                cloths: state.cloths.filter(cloth => cloth.uuid !== action.payload)
             }
         case ADD_CLOTH:
             return {
                 ...state,
-                gateways: [...state.gateways, action.payload]
+                cloths: [...state.cloths, action.payload]
             }
         default:
             return state;

@@ -1,10 +1,13 @@
 import { combineReducers } from 'redux';
-import gateways from './gateways'
+import cloths from './cloths'
 import errors from "./errors";
 import messages from "./messages";
+import orders from "./orders";
 
 export default combineReducers({
-    gateways,
+    orders,
+    cloths,
     errors,
-    messages
+    messages,
+
 });
