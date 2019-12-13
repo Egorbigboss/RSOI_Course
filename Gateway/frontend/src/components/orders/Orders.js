@@ -1,30 +1,88 @@
 import React, { Component, Fragment } from 'react';
-import { connect } from 'react-redux';
-import PropTypes from 'prop-types';
-import { getOrders } from '../../actions/orders';
+import { useAlert } from "react-alert";
+import { Link } from 'react-router-dom'
+
+const options = { year: 'numeric', month: 'numeric', day: 'numeric' };
+
+const initialState = {
+    deleteAlert: "",
+}
+
+function formatDate(string) {
+    var options = { year: 'numeric', month: 'numeric', day: 'numeric' };
+    return new Date(string).toLocaleDateString([], options);
+}
+
+
+function deleteOrder(uuid) {
+    return fetch(`/api/orders/${uuid}`, {
+        mode: 'cors', // no-cors, cors, *same-origin
+        method: 'DELETE',
+    })
+    .then()
+    .catch(error => {
+        console.log("tut");
+        console.log(error);
+    })
+}
 
 export class Orders extends Component {
-    // static propTypes = {
-    //     orders: PropTypes.array.isRequired,
-    //     getOrders: PropTypes.func.isRequired,
-    // };
+    constructor(props) {
+        super(props);
 
+        this.state = {
+            orders: [],
+        };
+    }
 
-    ComponentDidMount() {
-        this.props.getOrders();
+    componentDidMount() {
+        fetch('/api/orders/')
+            .then((response) => response.json())
+            .then(json =>
+                this.setState({
+                    orders: json
+                })
+            );
     }
 
     render() {
+
+        const { orders } = this.state;
+        console.log(orders)
         return (
-            <div>
-                <h1>Orders List</h1>
-            </div>
+            <Fragment>
+                <div>
+                    <h2>Orders
+                        <table className="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>UUID</th>
+                                    <th>Type of cloth</th>
+                                    <th>Date</th>
+                                    <th />
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {orders.map(order => (
+                                    <tr key={order.uuid}>
+                                        <td>{order.uuid}</td>
+                                        <td>{order.type_of_cloth}</td>
+                                        <td>{formatDate(order.date_of_creation)}</td>
+                                        <td><button onClick={deleteOrder.bind(this, order.uuid)}
+                                            className="btn btn-danger btn-sm">
+                                            Delete</button>
+                                        </td>
+                                    </tr>
+
+                                ))}
+                            </tbody>
+                        </table>
+                    </h2>
+                </div>
+            </Fragment>
         );
-    }
+    };
+
 }
 
-const mapStateToProps = state => ({
-    orders: state.orders.orders
-})
-
-export default connect(mapStateToProps, { getOrders })(Orders);
+export default Orders;
