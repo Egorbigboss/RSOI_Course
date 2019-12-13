@@ -103,3 +103,7 @@ venv.bak/
 # mypy
 .mypy_cache/
 node_modules
+.DS_Store
+.babelrc
+.vscode/settings.json
+Gateway/frontend/static/frontend/main.js
