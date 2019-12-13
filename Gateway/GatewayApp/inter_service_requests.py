@@ -40,7 +40,7 @@ class Requester:
         return json.dumps({"error": msg})
 
     @staticmethod
-    def __delete_error_cloth(msg: str):
+    def __delete_error(msg: str):
         return json.dumps({"error": msg})
 
     def get_limit_offset_from_request(request):
@@ -76,13 +76,14 @@ class Requester:
     @staticmethod
     def delete_concrete_cloth(cloth_uuid: str):
         try:
+            print(cloth_uuid)
             response = Requests.send_delete_request(
                 Requester.CLOTHS_HOST + f"{cloth_uuid}"
             )
-            print(response.status_code)
+            print("Code del cloth",response.status_code)
             if response.status_code != 204:
                 return (
-                    Requester.__delete_error_cloth(
+                    Requester.__delete_error(
                         "Cloth was already deleted or does not exist!"
                     ),
                     500,
@@ -90,7 +91,47 @@ class Requester:
         except requests.exceptions.BaseHTTPError:
             return None
         return (
-            Requester.__delete_error_cloth("Cloth was successfully deleted!"),
+            Requester.__delete_error("Cloth was successfully deleted!"),
+            response.status_code,
+        )
+
+    @staticmethod
+    def delete_concrete_order(order_uuid: str):
+        try:
+            
+            response_json, code = Requester.get_concrete_order(order_uuid)
+            print(response_json)
+            if code == 200:
+                cloth_uuid = response_json['cloth_uuid']
+                response_json, code = Requester.delete_concrete_cloth(str(cloth_uuid))
+                print("Cloth del json",response_json)
+            print("Code of cloth delete",code)
+            if code == 500:
+                response = Requests.send_delete_request(
+                    Requester.ORDERS_HOST + f"{order_uuid}"
+                )
+                # print("Code of ord delete",response.status_code)
+                return (
+                    Requester.__delete_error(
+                        "Succesfully deleted order!"
+                    ),
+                    204,
+                )
+            
+            response = Requests.send_delete_request(
+                Requester.ORDERS_HOST + f"{order_uuid}"
+            )
+            if response.status_code != 204:
+                return (
+                    Requester.__delete_error(
+                        "Order was already deleted or does not exist!"
+                    ),
+                    500,
+                )
+        except requests.exceptions.BaseHTTPError:
+            return None
+        return (
+            Requester.__delete_error("Order was successfully deleted!"),
             response.status_code,
         )
 
@@ -337,6 +378,7 @@ class Requester:
         response_json = Requester.next_and_prev_links_to_params(
             response.json(), cur_url
         )
+        print(response_json)
         return response_json, 200
 
     @staticmethod
