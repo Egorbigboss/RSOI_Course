@@ -1,13 +1,13 @@
-import { GET_ORDERS } from "../actions/types"
+import { GET_ORDERS } from '../components/orders/types';
 
 const initialState = {
     orders: []
-};
+}
 
-
-export default function (state = initialState, action) {
+export default function ordersReducer(state = initialState, action) {
     switch (action.type) {
         case GET_ORDERS:
+            console.log("REDUCER");
             return {
                 ...state,
                 orders: action.payload
@@ -16,3 +16,6 @@ export default function (state = initialState, action) {
             return state;
     }
 }
+
+
+export const getOrdersState = state => state.orders;
