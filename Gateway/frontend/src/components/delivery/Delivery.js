@@ -27,7 +27,7 @@ export class Delivery extends Component {
     }
 
     componentDidMount() {
-        fetch('/api/delivery/user/1')
+        fetch('/api/delivery/user/2')
             .then((response) => response.json())
             .then(json =>
                 this.setState({

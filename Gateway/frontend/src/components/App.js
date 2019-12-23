@@ -32,6 +32,7 @@ export default function  App (){
         <Router>
         <Fragment>
           <Header />
+          <Alerts />
           <div className="container">
           <Switch>
             <Route exact path="/" component={Ord_Dashboard} />
