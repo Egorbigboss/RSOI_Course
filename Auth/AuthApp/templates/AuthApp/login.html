@@ -1,0 +1,21 @@
+{% extends 'AuthApp/base.html' %}
+{% block title %}Login{% endblock %}
+
+{% block content %}
+<h2>Login</h2>
+<form method="post">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <div id="block">
+    <label for="id_username">Username</label>
+    <input id="id_username" maxlength="100" class="text" name="username">
+  </div>
+
+    <div id="block">
+        <label for="id_password">Password</label>
+        <input id="id_password" maxlength="100" class="password" name="password">
+  </div>
+
+  <button type="submit">Login</button>
+</form>
+{% endblock %}
