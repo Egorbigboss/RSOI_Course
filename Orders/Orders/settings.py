@@ -38,7 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'OrdersApp',
-    'rest_framework'
+    'rest_framework',
+    'oauth2_provider',
 ]
 
 MIDDLEWARE = [
