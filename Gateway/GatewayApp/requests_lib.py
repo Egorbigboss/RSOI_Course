@@ -16,17 +16,18 @@ class Requests:
     )
 
     @staticmethod
-    def get_request(url: str):
+    def get_request(url: str, headers: dict = {}):
         try:
-            response = requests.get(url)
+            print(headers)
+            response = requests.get(url, headers = headers)
         except (requests.exceptions.BaseHTTPError, requests.ConnectionError):
             return None
         return response
 
     @staticmethod
-    def post_request(url: str, data: dict):
+    def post_request(url: str, data: dict = {}, headers: dict = {}):
         try:
-            response = requests.post(url, data)
+            response = requests.post(url, data, headers)
         except (requests.exceptions.BaseHTTPError, requests.ConnectionError):
             return None
         return response
@@ -48,15 +49,15 @@ class Requests:
         return response
 
     @db_breaker
-    def send_post_request(url: str, data: dict):
-        response = Requests.post_request(url, data)
+    def send_post_request(url: str, data: dict,  headers: dict={} ):
+        response = Requests.post_request(url, data, headers)
         if response is None:
             raise ValueError
         return response
 
     @db_breaker
-    def send_get_request(url: str):
-        response = Requests.get_request(url)
+    def send_get_request(url: str, headers: dict = {}):
+        response = Requests.get_request(url, headers = headers)
         if response is None:
             raise ValueError
         return response
