@@ -23,6 +23,8 @@ class Requester:
     CLOTHS_HOST = 'http://127.0.0.1:8002/api/cloths/'
     DELIVERY_HOST = 'http://127.0.0.1:8003/api/delivery/'
     DELIVERY_URL = 'http://127.0.0.1:8000/api/delivery/'
+    AUTH_HOST = 'http://127.0.0.1:8004/api/'
+    AUTH_URL = 'http://127.0.0.1:8000/user/'
     ERROR_RETURN = (json.dumps({'error': 'BaseHTTPError was raised!'}), 500)
     ERROR_CREATE = (json.dumps({'error': 'Connection refused by one of the services!'}), 500)
 
@@ -313,3 +315,31 @@ class Requester:
             return Requester.ERROR_RETURN
         if response.status_code != 200:
             return response.json(), response.status_code
+
+
+
+    @staticmethod
+    def retrieve_token_from_request(request):
+        token = request.META.get('HTTP_AUTHORIZATION')
+        print(token)
+        return token
+
+
+    @staticmethod 
+    def authenticate_user(request, data: dict):
+        response = Requests.send_post_request(Requester.AUTH_HOST + f'token_auth/', data=data)
+        if response is None:
+            return Requester.ERROR_RETURN
+        return response.json(), response.status_code
+
+    @staticmethod
+    def check_token(request):
+        token = Requester.retrieve_token_from_request(request)
+        response = Requests.send_get_request(Requester.AUTH_HOST + f'check_token/', headers = {'Authorization': f'Token {token}'})
+        return response.status_code == 200
+
+    @staticmethod
+    def get_user(request):
+        token = Requester.retrieve_token_from_request(request)
+        response = Requests.send_get_request(Requester.AUTH_HOST + f'check_token/', headers = {'Authorization': f'Token {token}'})
+        return response.json(), response.status_code
