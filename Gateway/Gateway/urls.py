@@ -4,5 +4,6 @@ from django.conf.urls import include, url
 
 urlpatterns = [
      path('admin/', admin.site.urls),
+     url('',include('frontend.urls')),
      url(r'^api/', include('GatewayApp.urls')),
 ]
