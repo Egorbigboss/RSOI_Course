@@ -5,4 +5,5 @@ from django.urls import path
 urlpatterns = [
     url(r'^cloths/all/$', views.AllClothsView.as_view()),
     url(r'^cloths/(?P<cloth_uuid>[0-9a-f-]+)/$', views.ConcreteClothView.as_view()),
+    url(r'^cloths/stats/$',views.StatsView.as_view())
 ]
