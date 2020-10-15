@@ -5,6 +5,9 @@ from rest_framework.views import APIView, Response, Request
 from OrdersApp.serializers import OrderSerializer
 from OrdersApp.models import Order
 from django.db.models import Q
+import datetime
+import logging
+logger = logging.getLogger("mylogger")
 
 # Create your views here.
 
@@ -20,6 +23,19 @@ class AllOrdersView(ListCreateAPIView):
     serializer_class = OrderSerializer
     def get_queryset(self):
         return Order.objects.all()
+
+class StatsView(APIView):
+    def get(self, request: Request):
+        # filter_type  = request.data['date_of_creation']
+        # if filter_type is None:
+        #     return Order.objects.all()
+        dates = Order.objects.values_list('date_of_creation', flat = True)
+        date_stats = {1: 0, 2: 0, 3 : 0, 4 : 0, 5 : 0}
+        for date in dates:
+            date_stats[int(date.weekday())] = date_stats[int(date.weekday())] + 1
+        content = {'days' : date_stats}
+        return Response(content)
+
 
 class ConcreteOrderView(APIView):
     def get_object(self, pk):
@@ -54,3 +70,6 @@ class ConcreteOrderView(APIView):
             serializer.save()
             return Response(data=serializer.data, status=status.HTTP_200_OK)
         return Response(status=status.HTTP_404_NOT_FOUND)
+
+
+
