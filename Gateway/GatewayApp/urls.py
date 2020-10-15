@@ -21,6 +21,10 @@ urlpatterns = [
      url(r'^users/authenticate/$',views.AuthenicateUser.as_view()),
      url(r'^users/user/$',views.GetUser.as_view()),
 
+     url(r'^stats/all/$', views.StatsView.as_view()),
+     url(r'^stats/(?P<stats_uuid>[0-9f-f-]+)/$', views.ConcreteStatView.as_view()),
+     url(r'^stats/update/$', views.MetricsView.as_view()),
+
      url(r'^oauth/login/$', views.OLoginView.as_view()),
      url(r'^oauth/redirect/$', views.ORedirectView.as_view()),
 ]

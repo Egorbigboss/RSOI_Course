@@ -25,6 +25,8 @@ class Requester:
     DELIVERY_URL = 'http://127.0.0.1:8000/api/delivery/'
     AUTH_HOST = 'http://127.0.0.1:8004/api/'
     AUTH_URL = 'http://127.0.0.1:8000/user/'
+    STATS_HOST = 'http://127.0.0.1:8005/api/stats/'
+    STATS_URL = 'http://127.0.0.1:8000/api/stats/'
     ERROR_RETURN = (json.dumps({'error': 'BaseHTTPError was raised!'}), 500)
     ERROR_CREATE = (json.dumps({'error': 'Connection refused by one of the services!'}), 500)
 
@@ -342,4 +344,41 @@ class Requester:
     def get_user(request):
         token = Requester.retrieve_token_from_request(request)
         response = Requests.send_get_request(Requester.AUTH_HOST + f'check_token/', headers = {'Authorization': f'Token {token}'})
+        return response.json(), response.status_code
+
+
+    @staticmethod
+    def collect_stats(request):
+        response = Requests.send_get_request(Requester.STATS_HOST + f'all/')
+        return response.json(), response.status_code
+
+
+    @staticmethod
+    def create_metric(request, data: dict):
+        response = Requests.send_post_request(Requester.STATS_HOST + f'all/', data = data)
+        return response.json(), response.status_code
+
+
+
+    @staticmethod
+    def update_metric(requset, data: dict):
+        if data['type_of_object'] == 'orders':
+            response = Requests.send_get_request(Requester.ORDERS_HOST + f'stats/')
+            # response = requests.get
+            if response.status_code == 200:
+                days = json.dumps(response.json()['days'])
+                print(days)
+                response_ord = Requests.send_patch_request(Requester.STATS_HOST + f'update/', data = {'filter' : 'dates', 'days' : days})
+                return response_ord.json(), response_ord.status_code
+        else:
+            response = Requests.send_get_request(Requester.CLOTHS_HOST + f'stats/', data = {'type_of_object' : data['type_of_object']})
+            if response.status_code == 200:
+                response_cloth = Requests.send_patch_request(Requester.STATS_HOST + f'update/', data = {'filter' : data['type_of_object'], 'count' : response.json()['count']})
+                return response_cloth.json(), response_cloth.status_code
+        
+
+
+    @staticmethod
+    def get_concrete_metric(request, stat_uuid):
+        response = Requester.send_post_request(Requester.STATS_HOST + f'{stat_uuid}')
         return response.json(), response.status_code

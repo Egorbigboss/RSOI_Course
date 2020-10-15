@@ -16,10 +16,10 @@ class Requests:
     )
 
     @staticmethod
-    def get_request(url: str, headers: dict = {}):
+    def get_request(url: str, headers: dict = {}, data = {}):
         try:
             print(headers)
-            response = requests.get(url, headers = headers)
+            response = requests.get(url, headers = headers, data = data)
         except (requests.exceptions.BaseHTTPError, requests.ConnectionError):
             return None
         return response
@@ -56,8 +56,8 @@ class Requests:
         return response
 
     @db_breaker
-    def send_get_request(url: str, headers: dict = {}):
-        response = Requests.get_request(url, headers = headers)
+    def send_get_request(url: str, headers: dict = {}, data = {}):
+        response = Requests.get_request(url, headers = headers, data=data)
         if response is None:
             raise ValueError
         return response

@@ -78,6 +78,36 @@ class ConcreteOrderView(APIView):
         response_json, code = Requester.patch_concrete_order(order_uuid, data=request.data)
         return Response(data=response_json, status=code)
 
+class StatsView(APIView):
+    def get(self, request: Request):
+        data, code = Requester.collect_stats(request=request)
+        return Response(data, status=code)
+    
+    def post(self, request : Request):
+        stat_data = {'type_of_object', 'text'}.intersection(request.data.keys())
+        if (len(stat_data)) != 2:
+            return Response ({'error': 'Body must have type_of_object and text'},status=400)
+        response_json, code = Requester.create_metric(type_of_object=request.data['type_of_object'], text=request.data['text'])
+        return Response(data=response_json, status=code)
+
+class MetricsView(APIView):
+    def get(self, request: Request):
+        data,code = Requester.update_metric(request, data = request.data)
+        return Response(data=data, status=code)
+
+class ConcreteStatView(APIView):
+    def get(self, request: Request, stat_uuid):
+        data, code = Requester.get_concrete_metric(str(stat_uuid))
+
+class ConcreteOrderView(APIView):
+    def get(self, request: Request, order_uuid):
+        data, code = Requester.get_concrete_order(str(order_uuid))
+        return Response(data, status=code)
+
+    def patch(self, request : Request, order_uuid):
+        response_json, code = Requester.patch_concrete_order(order_uuid, data=request.data)
+        return Response(data=response_json, status=code)
+
 class AuthenicateUser(APIView):
     def post(self, request: Request):
         data, code = Requester.authenticate_user(request,data=request.data)
